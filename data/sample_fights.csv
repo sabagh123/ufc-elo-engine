@@ -1,0 +1,5 @@
+event_date,event_name,fight_id,fighter_a,fighter_b,result,weight_class,method,round,time
+1993-11-12,Example Event 1,example-001,Fighter Alpha,Fighter Bravo,fighter_a_win,Open Weight,Submission,1,2:00
+1993-11-12,Example Event 1,example-002,Fighter Charlie,Fighter Delta,fighter_b_win,Open Weight,Decision,1,5:00
+1994-03-11,Example Event 2,example-003,Fighter Alpha,Fighter Delta,draw,Open Weight,Decision,1,5:00
+1994-09-09,Example Event 3,example-004,Fighter Bravo,Fighter Charlie,no_contest,Open Weight,No Contest,1,1:00

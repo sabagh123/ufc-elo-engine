@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Generated UFC data and ranking outputs
+data/raw/*
+!data/raw/.gitkeep
+outputs/*
+!outputs/.gitkeep
