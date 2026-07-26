@@ -78,6 +78,48 @@ def test_process_fights_sorts_oldest_first() -> None:
     assert engine.fighters["Fighter B"].rating > engine.fighters["Fighter C"].rating
 
 
+def test_process_fights_uses_bout_order_within_an_event() -> None:
+    later_bout = Fight(
+        event_date=date(2026, 1, 1),
+        event_name="Tournament",
+        event_id="event-1",
+        bout_order=2,
+        fighter_a="Fighter A",
+        fighter_b="Fighter C",
+        result=FightResult.FIGHTER_A_WIN,
+    )
+    opening_bout = Fight(
+        event_date=date(2026, 1, 1),
+        event_name="Tournament",
+        event_id="event-1",
+        bout_order=1,
+        fighter_a="Fighter B",
+        fighter_b="Fighter A",
+        result=FightResult.FIGHTER_A_WIN,
+    )
+    engine = EloEngine()
+    engine.process_fights([later_bout, opening_bout])
+
+    assert engine.fighters["Fighter B"].rating > engine.fighters["Fighter C"].rating
+
+
+def test_source_ids_keep_same_named_fighters_separate() -> None:
+    fight = Fight(
+        event_date=date(2026, 1, 1),
+        event_name="Test Event",
+        fighter_a="Same Name",
+        fighter_a_id="fighter-1",
+        fighter_b="Same Name",
+        fighter_b_id="fighter-2",
+        result=FightResult.FIGHTER_A_WIN,
+    )
+    engine = EloEngine()
+    engine.process_fight(fight)
+
+    assert engine.fighters["id:fighter-1"].rating == pytest.approx(1516)
+    assert engine.fighters["id:fighter-2"].rating == pytest.approx(1484)
+
+
 def test_rankings_are_sorted_highest_first() -> None:
     engine = EloEngine()
     engine.process_fight(make_fight())

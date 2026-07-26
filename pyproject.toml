@@ -9,10 +9,7 @@ description = "A transparent Elo rating engine for UFC fight history"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-dependencies = [
-    "beautifulsoup4>=4.12,<5",
-    "requests>=2.31,<3",
-]
+dependencies = []
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<10"]

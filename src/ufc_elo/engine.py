@@ -14,6 +14,7 @@ class FighterRating:
 
     name: str
     rating: float
+    fighter_id: str = ""
     wins: int = 0
     losses: int = 0
     draws: int = 0
@@ -61,25 +62,48 @@ class EloEngine:
         exponent = (rating_b - rating_a) / self.rating_scale
         return 1.0 / (1.0 + 10.0**exponent)
 
-    def get_fighter(self, name: str) -> FighterRating:
+    @staticmethod
+    def _fighter_key(name: str, fighter_id: str = "") -> str:
+        clean_id = fighter_id.strip()
+        if clean_id:
+            return f"id:{clean_id}"
+        return name.strip()
+
+    def get_fighter(
+        self,
+        name: str,
+        fighter_id: str = "",
+    ) -> FighterRating:
         """Return an existing fighter or create one at the starting rating."""
 
         clean_name = name.strip()
+        clean_id = fighter_id.strip()
         if not clean_name:
             raise ValueError("Fighter name cannot be empty")
 
-        if clean_name not in self.fighters:
-            self.fighters[clean_name] = FighterRating(
+        key = self._fighter_key(clean_name, clean_id)
+        if key not in self.fighters:
+            self.fighters[key] = FighterRating(
                 name=clean_name,
                 rating=self.initial_rating,
+                fighter_id=clean_id,
             )
-        return self.fighters[clean_name]
+        elif clean_id and self.fighters[key].name != clean_name:
+            # A stable source ID lets one fighter keep a single rating even if
+            # the displayed spelling changes later in the dataset.
+            self.fighters[key].name = clean_name
+        return self.fighters[key]
 
     def process_fight(self, fight: Fight) -> None:
         """Apply one fight result to both fighters."""
 
-        fighter_a = self.get_fighter(fight.fighter_a)
-        fighter_b = self.get_fighter(fight.fighter_b)
+        key_a = self._fighter_key(fight.fighter_a, fight.fighter_a_id)
+        key_b = self._fighter_key(fight.fighter_b, fight.fighter_b_id)
+        if key_a == key_b:
+            raise ValueError("A fighter cannot fight themself")
+
+        fighter_a = self.get_fighter(fight.fighter_a, fight.fighter_a_id)
+        fighter_b = self.get_fighter(fight.fighter_b, fight.fighter_b_id)
 
         if fight.result is FightResult.NO_CONTEST:
             fighter_a.no_contests += 1
@@ -118,7 +142,11 @@ class EloEngine:
         backwards from the newest event to the oldest.
         """
 
-        for fight in sorted(fights, key=lambda item: item.event_date):
+        def chronological_key(fight: Fight) -> tuple[object, ...]:
+            event_key = fight.event_id or fight.event_name.casefold()
+            return (fight.event_date, event_key, fight.bout_order)
+
+        for fight in sorted(fights, key=chronological_key):
             self.process_fight(fight)
 
     def rankings(self, minimum_fights: int = 0) -> list[FighterRating]:

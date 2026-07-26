@@ -3,61 +3,67 @@
 A transparent Python project that reconstructs UFC fighter ratings by
 processing completed fights in chronological order.
 
-The project intentionally starts with ordinary Elo instead of machine
-learning. That gives us a baseline that is easy to explain, test, and improve.
+The first version intentionally uses ordinary Elo rather than machine
+learning. This gives the project an explainable, testable baseline before any
+subjective bonuses or more complicated models are considered.
 
 ## Current status
 
 Version `0.1` contains:
 
-- a UFCStats event-page scraper;
-- a normalized CSV format for fight history;
+- a normalized fight-history CSV schema;
+- a converter for the TidyTuesday 2026-07-07 `ufc_fights.csv` dataset;
 - a basic Elo engine with a starting rating of `1500` and `K = 32`;
 - support for wins, losses, draws, and no contests;
+- stable event, fight, and optional fighter IDs;
+- explicit bout order for early same-day tournaments;
 - CSV ranking output;
-- automated tests for the scraper, CSV pipeline, and rating mathematics.
+- automated tests for imports, chronology, CSV handling, and Elo mathematics.
 
-The scraper and the rating engine are separate on purpose:
+The pipeline is:
 
 ```text
-UFCStats pages -> normalized fights.csv -> Elo engine -> rankings.csv
+reusable source CSV -> normalized fights.csv -> Elo engine -> rankings.csv
 ```
 
-If the source website changes, we fix the scraper without rewriting the Elo
-math. If we improve the Elo model, we do not need to scrape the data again.
+## Why the project does not scrape UFCStats
 
-## Data source
+UFCStats links to the current [UFC Terms of
+Use](https://www.ufc.com/terms), which prohibit automated page-scraping,
+robots, and spiders. This repository therefore does not automatically request
+UFCStats pages.
 
-The scraper targets the
-[UFCStats completed-events index](http://ufcstats.com/statistics/events/completed?page=all).
-That index includes historical event pages going back to UFC 1. Each completed
-event page provides the event date, fighters, result, weight class, method,
-round, and time.
+For a portfolio project, using a published reusable dataset is more defensible
+than ignoring a source site's rules. The import layer remains separate from
+the Elo engine, so a different properly licensed dataset can be added later
+without changing the rating mathematics.
 
-Before running a full scrape or redistributing a complete dataset, check the
-site's current terms and robots rules. The code identifies itself, restricts
-requests to the UFCStats domain, and waits one second between event requests.
-Do not reduce that delay aggressively.
+The currently supported input is the `ufc_fights.csv` file published for
+[TidyTuesday 2026-07-07](https://github.com/rfordatascience/tidytuesday/tree/main/data/2026/2026-07-07).
+TidyTuesday explicitly provides direct download instructions and encourages
+people to create and share analyses. Always retain the source attribution and
+recheck the applicable data terms before redistributing a source dataset.
 
-Generated raw data is ignored by Git so that thousands of copied records are
-not automatically committed to this repository.
+Generated source and normalized data remain ignored by Git. The project code,
+small fictional sample, and tests can be public without automatically
+republishing thousands of third-party records.
 
 ## Project structure
 
 ```text
 ufc-elo-engine/
 ├── data/
-│   ├── raw/                  # Generated scrape output (not committed)
-│   └── sample_fights.csv     # Small fictional dataset for a safe test run
-├── outputs/                  # Generated ranking files
+│   ├── raw/                  # Downloaded/generated files (not committed)
+│   └── sample_fights.csv     # Small fictional test dataset
+├── outputs/                  # Generated rankings (not committed)
 ├── scripts/
 │   ├── build_rankings.py
-│   └── scrape_fights.py
+│   └── import_fights.py
 ├── src/ufc_elo/
 │   ├── csv_io.py
+│   ├── data_import.py
 │   ├── engine.py
-│   ├── models.py
-│   └── scraper.py
+│   └── models.py
 ├── tests/
 ├── pyproject.toml
 └── README.md
@@ -65,53 +71,31 @@ ufc-elo-engine/
 
 ## One-time setup on Windows
 
-You do not need to create another project folder manually if you use GitHub
-Desktop. Cloning creates the folder for you.
-
 Install:
 
 1. [Python](https://www.python.org/downloads/)
 2. [Visual Studio Code](https://code.visualstudio.com/)
 3. [GitHub Desktop](https://desktop.github.com/)
 
-Then:
-
-1. Open GitHub Desktop and sign in.
-2. Select **File -> Clone repository**.
-3. Choose `sabagh123/ufc-elo-engine`.
-4. Pick a normal location such as `Documents/GitHub`.
-5. Click **Clone**.
-6. In GitHub Desktop, click **Open in Visual Studio Code**.
-
-The folder opened in VS Code is your local copy. GitHub holds the online copy.
-
-Open the VS Code terminal with **Terminal -> New Terminal**, then run:
+Clone the repository in GitHub Desktop, then open it in VS Code. Open
+**Terminal -> New Terminal** and run:
 
 ```powershell
 py -m venv .venv
-.\.venv\Scripts\Activate.ps1
-py -m pip install -e ".[dev]"
-pytest
-```
-
-If PowerShell blocks the activation script, you can skip activation and use
-the environment's Python directly:
-
-```powershell
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
 .\.venv\Scripts\python.exe -m pytest
 ```
 
-## Run the Elo engine with sample data
+Using the virtual environment's Python directly avoids PowerShell activation
+policy problems.
 
-The sample data uses fictional fighter names. It verifies the whole local
-pipeline without depending on a website:
+## Run the fictional sample
 
 ```powershell
-python scripts/build_rankings.py
+.\.venv\Scripts\python.exe scripts\build_rankings.py
 ```
 
-That writes:
+This reads `data/sample_fights.csv` and writes:
 
 ```text
 outputs/rankings.csv
@@ -120,58 +104,69 @@ outputs/rankings.csv
 You can also change the model settings:
 
 ```powershell
-python scripts/build_rankings.py --k-factor 24 --minimum-fights 1
+.\.venv\Scripts\python.exe scripts\build_rankings.py `
+  --k-factor 24 `
+  --minimum-fights 1
 ```
 
-## Test the scraper carefully
+## Import historical fight data
 
-Start with only the oldest event:
+1. Open the [TidyTuesday UFC data
+   page](https://github.com/rfordatascience/tidytuesday/tree/main/data/2026/2026-07-07).
+2. Download `ufc_fights.csv`.
+3. Put it in `data/raw/` as `tidytuesday_ufc_fights.csv`.
+4. Run:
 
 ```powershell
-python scripts/scrape_fights.py --max-events 1
+.\.venv\Scripts\python.exe scripts\import_fights.py `
+  --input data/raw/tidytuesday_ufc_fights.csv
 ```
 
-The output is written to:
+The importer:
 
-```text
-data/raw/ufc_fights.csv
-```
+- validates the expected source columns;
+- normalizes win, loss, draw, and no-contest values;
+- derives stable event and fight identifiers;
+- reverses each main-event-first event group;
+- assigns explicit `bout_order` values;
+- detects duplicate fight IDs;
+- writes `data/raw/ufc_fights.csv`.
 
-Open that file and confirm that the names, result, and event information look
-correct before requesting every event.
-
-After validation, a full run is:
+Then generate the historical rankings:
 
 ```powershell
-python scripts/scrape_fights.py
-```
-
-Then calculate ratings from the scraped file:
-
-```powershell
-python scripts/build_rankings.py `
+.\.venv\Scripts\python.exe scripts\build_rankings.py `
   --input data/raw/ufc_fights.csv `
   --output outputs/ufc_rankings.csv
 ```
 
-## Fight CSV schema
+The TidyTuesday source does not provide stable fighter profile IDs in its fight
+table. The engine therefore falls back to exact fighter names for that source.
+Its normalized schema already supports fighter IDs when a future source
+provides them.
+
+## Normalized fight schema
 
 | Column | Meaning |
 |---|---|
-| `event_date` | ISO date such as `1993-11-12` |
-| `event_name` | UFC event title |
-| `fight_id` | UFCStats fight identifier |
-| `fighter_a` | First fighter shown by the source |
-| `fighter_b` | Second fighter shown by the source |
-| `result` | `fighter_a_win`, `fighter_b_win`, `draw`, or `no_contest` |
-| `weight_class` | Bout division from the event page |
-| `method` | Decision, submission, KO/TKO, or other listed method |
+| `event_date` | ISO event date |
+| `event_name` | Event title |
+| `event_id` | Stable event identifier |
+| `bout_order` | Opening bout is 1, then increases |
+| `fight_id` | Stable fight identifier |
+| `fighter_a_id` | Optional stable source ID |
+| `fighter_a` | First fighter display name |
+| `fighter_b_id` | Optional stable source ID |
+| `fighter_b` | Second fighter display name |
+| `result` | Normalized result from fighter A's view |
+| `weight_class` | Bout division/category |
+| `method` | Listed result method |
 | `round` | Ending round |
 | `time` | Ending time in the round |
+| `source_url` | Auditable source reference |
 
-Only `event_date`, both fighter names, and `result` are required by the first
-Elo model. The remaining columns give later versions room to test additional
-ideas without rescraping.
+`bout_order` matters because early UFC events used same-night tournaments. A
+fighter's second match must not be rated before their first match.
 
 ## Elo model
 
@@ -189,11 +184,11 @@ R_A_new = R_A + K * (S_A - E_A)
 
 Where:
 
-- `R_A` and `R_B` are the fighters' ratings before the fight;
+- `R_A` and `R_B` are pre-fight ratings;
 - `S_A` is `1` for a win, `0` for a loss, or `0.5` for a draw;
 - `K` is `32` by default;
 - every new fighter starts at `1500`;
-- a no contest changes the record but not either rating.
+- a no contest changes the displayed record but not either rating.
 
 For two new fighters, the winner gains 16 points and the loser loses 16:
 
@@ -204,61 +199,45 @@ Loser:  1484
 
 ## Important limitations
 
-The first ranking is a baseline, not an official UFC ranking and not proof that
-one fighter would beat another today.
+This is an analytical baseline, not an official UFC ranking and not proof that
+one fighter would defeat another today.
 
-- Early UFC and modern UFC operated under different formats and divisions.
 - One global rating mixes weight classes.
-- Inactive and retired fighters stay in the historical table.
+- Inactive and retired fighters remain in the historical table.
 - Every rated result uses the same K-factor.
-- Margin, method, round, and opponent preparation time are ignored.
-- Fighters debut at 1500 even when they enter with very different experience.
-- A name change or duplicate source identity could split one fighter's record.
+- Method, round, and margin are intentionally ignored.
+- Fighters debut at 1500 even when they enter with different experience.
+- Name-based identity can split aliases until a source provides fighter IDs.
+- Historical source data may contain corrections or omissions.
 
-Those are useful research questions for later versions, but adding subjective
-bonuses before measuring the baseline would make the project harder to defend.
+These limitations should be measured before adding more complicated rules.
 
-## How collaboration will work
+## GitHub workflow
 
-`main` should remain the stable version. New work goes into a branch and a
+`main` remains the stable branch. New work belongs in a feature branch and a
 draft pull request:
 
-1. Create a branch for one feature.
-2. Change and test the code.
-3. Commit the change.
-4. Push the branch to GitHub.
-5. Open a draft pull request.
-6. Review **Files changed** and the test results.
-7. Merge only when the change makes sense.
+1. Make and test a focused change.
+2. Commit it to the feature branch.
+3. Push the branch.
+4. Review the draft pull request's **Files changed** and checks.
+5. Merge only after the code and data assumptions have been verified.
 
-When a pull request is merged online, open GitHub Desktop and click
-**Fetch origin**, then **Pull origin**. That downloads the newest `main` branch
-to your local folder.
-
-Useful requests for future work include:
-
-```text
-Add weight-class-specific ratings on a new branch, test them, and open a draft
-pull request. Do not merge it.
-```
-
-```text
-Inspect the scraper failure, explain the cause, and propose a fix without
-changing main.
-```
+After a pull request is merged, switch to `main` in GitHub Desktop, click
+**Fetch origin**, and then **Pull origin**.
 
 ## Roadmap
 
-- Validate the scraper against a small set of live historical events.
-- Generate the complete chronological fight CSV.
-- Add data-quality checks for duplicate fights and unknown outcomes.
-- Compare one global Elo table with division-specific tables.
-- Add rating history and rankings for any selected date.
-- Evaluate prediction accuracy on fights that occur later in time.
-- Tune the K-factor using historical validation rather than guesswork.
-- Add a small Streamlit dashboard only after the data and model are reliable.
+- Validate the TidyTuesday import on UFC 1 and several modern events.
+- Add a data-quality report for duplicates, missing values, and aliases.
+- Generate the first full historical Elo ranking.
+- Compare global Elo with division-specific ratings.
+- Add rating history and rankings for a selected date.
+- Evaluate prediction accuracy on later fights.
+- Tune the K-factor using historical validation.
+- Add a small dashboard after the data and model are reliable.
 
 ## License
 
-The source code is available under the MIT License. Source data remains subject
-to the source website's applicable terms.
+The project source code is available under the MIT License. Third-party source
+data remains subject to its own terms and attribution requirements.

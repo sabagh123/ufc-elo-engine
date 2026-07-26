@@ -14,14 +14,19 @@ from .models import Fight, FightResult
 FIGHT_FIELDS = [
     "event_date",
     "event_name",
+    "event_id",
+    "bout_order",
     "fight_id",
+    "fighter_a_id",
     "fighter_a",
+    "fighter_b_id",
     "fighter_b",
     "result",
     "weight_class",
     "method",
     "round",
     "time",
+    "source_url",
 ]
 
 
@@ -39,14 +44,19 @@ def write_fights(path: str | Path, fights: Iterable[Fight]) -> None:
                 {
                     "event_date": fight.event_date.isoformat(),
                     "event_name": fight.event_name,
+                    "event_id": fight.event_id,
+                    "bout_order": fight.bout_order,
                     "fight_id": fight.fight_id,
+                    "fighter_a_id": fight.fighter_a_id,
                     "fighter_a": fight.fighter_a,
+                    "fighter_b_id": fight.fighter_b_id,
                     "fighter_b": fight.fighter_b,
                     "result": fight.result.value,
                     "weight_class": fight.weight_class,
                     "method": fight.method,
                     "round": fight.round,
                     "time": fight.time,
+                    "source_url": fight.source_url,
                 }
             )
 
@@ -66,14 +76,19 @@ def read_fights(path: str | Path) -> list[Fight]:
             Fight(
                 event_date=date.fromisoformat(row["event_date"]),
                 event_name=row["event_name"],
+                event_id=row["event_id"],
+                bout_order=int(row["bout_order"] or 0),
                 fight_id=row["fight_id"],
+                fighter_a_id=row["fighter_a_id"],
                 fighter_a=row["fighter_a"],
+                fighter_b_id=row["fighter_b_id"],
                 fighter_b=row["fighter_b"],
                 result=FightResult(row["result"]),
                 weight_class=row["weight_class"],
                 method=row["method"],
                 round=row["round"],
                 time=row["time"],
+                source_url=row["source_url"],
             )
             for row in reader
         ]
@@ -89,6 +104,7 @@ def write_rankings(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     fields = [
         "rank",
+        "fighter_id",
         "fighter",
         "rating",
         "record",
@@ -103,6 +119,7 @@ def write_rankings(
             writer.writerow(
                 {
                     "rank": rank,
+                    "fighter_id": fighter.fighter_id,
                     "fighter": fighter.name,
                     "rating": f"{fighter.rating:.2f}",
                     "record": fighter.record,

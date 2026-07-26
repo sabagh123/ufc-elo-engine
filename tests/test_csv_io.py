@@ -10,14 +10,19 @@ def test_fight_csv_round_trip(tmp_path) -> None:
         Fight(
             event_date=date(1993, 11, 12),
             event_name="Test Event",
+            event_id="event-1",
+            bout_order=1,
             fight_id="abc123",
+            fighter_a_id="fighter-a",
             fighter_a="Fighter A",
+            fighter_b_id="fighter-b",
             fighter_b="Fighter B",
             result=FightResult.FIGHTER_A_WIN,
             weight_class="Open Weight",
             method="Submission",
             round="1",
             time="2:00",
+            source_url="https://example.test/fights/abc123",
         )
     ]
 

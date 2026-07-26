@@ -1,4 +1,4 @@
-"""Data models shared by the scraper and Elo engine."""
+"""Data models shared by dataset importers and the Elo engine."""
 
 from __future__ import annotations
 
@@ -25,14 +25,32 @@ class Fight:
     fighter_a: str
     fighter_b: str
     result: FightResult
+    event_id: str = ""
+    bout_order: int = 0
     fight_id: str = ""
+    fighter_a_id: str = ""
+    fighter_b_id: str = ""
     weight_class: str = ""
     method: str = ""
     round: str = ""
     time: str = ""
+    source_url: str = ""
 
     def __post_init__(self) -> None:
         if not self.fighter_a.strip() or not self.fighter_b.strip():
             raise ValueError("Both fighter names are required")
-        if self.fighter_a.strip() == self.fighter_b.strip():
+        if self.bout_order < 0:
+            raise ValueError("bout_order cannot be negative")
+
+        same_source_id = (
+            self.fighter_a_id.strip()
+            and self.fighter_a_id.strip() == self.fighter_b_id.strip()
+        )
+        same_name_without_ids = (
+            not self.fighter_a_id.strip()
+            and not self.fighter_b_id.strip()
+            and self.fighter_a.strip().casefold()
+            == self.fighter_b.strip().casefold()
+        )
+        if same_source_id or same_name_without_ids:
             raise ValueError("A fighter cannot fight themself")
