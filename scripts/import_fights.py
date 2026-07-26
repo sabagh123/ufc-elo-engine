@@ -10,8 +10,11 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from ufc_elo.csv_io import write_fights  # noqa: E402
-from ufc_elo.data_import import import_tidytuesday_fights  # noqa: E402
+from ufc_elo.csv_io import read_fights, write_fights  # noqa: E402
+from ufc_elo.data_import import (  # noqa: E402
+    combine_fight_datasets,
+    import_tidytuesday_fights,
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -34,17 +37,29 @@ def parse_args() -> argparse.Namespace:
         default="main-first",
         help="Bout order used by the source CSV",
     )
+    parser.add_argument(
+        "--ufc1-seed",
+        type=Path,
+        default=PROJECT_ROOT / "data" / "ufc1_fights.csv",
+        help="Small attributed UFC 1 seed missing from the source dataset",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    fights = import_tidytuesday_fights(
+    imported_fights = import_tidytuesday_fights(
         args.input,
         source_order=args.source_order,
     )
+    ufc1_fights = read_fights(args.ufc1_seed)
+    fights = combine_fight_datasets(ufc1_fights, imported_fights)
     write_fights(args.output, fights)
     print(f"Imported {len(fights)} fights.")
+    print(
+        f"Included {len(ufc1_fights)} UFC 1 seed fights "
+        f"from {args.ufc1_seed}."
+    )
     print(f"Wrote normalized data to {args.output}.")
 
 

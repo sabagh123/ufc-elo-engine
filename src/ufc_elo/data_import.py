@@ -186,3 +186,30 @@ def import_tidytuesday_fights(
             fight.bout_order,
         ),
     )
+
+
+def combine_fight_datasets(
+    *datasets: Iterable[Fight],
+) -> list[Fight]:
+    """Combine normalized datasets and reject duplicate stable fight IDs."""
+
+    fights: list[Fight] = []
+    seen_fight_ids: set[str] = set()
+    for dataset in datasets:
+        for fight in dataset:
+            if fight.fight_id and fight.fight_id in seen_fight_ids:
+                raise ImportError(
+                    f"Duplicate fight ID across datasets: {fight.fight_id!r}"
+                )
+            if fight.fight_id:
+                seen_fight_ids.add(fight.fight_id)
+            fights.append(fight)
+
+    return sorted(
+        fights,
+        key=lambda fight: (
+            fight.event_date,
+            fight.event_id or fight.event_name.casefold(),
+            fight.bout_order,
+        ),
+    )

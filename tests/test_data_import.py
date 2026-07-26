@@ -2,8 +2,14 @@ import csv
 
 import pytest
 
-from ufc_elo.data_import import ImportError, import_tidytuesday_fights
-from ufc_elo.models import FightResult
+from datetime import date
+
+from ufc_elo.data_import import (
+    ImportError,
+    combine_fight_datasets,
+    import_tidytuesday_fights,
+)
+from ufc_elo.models import Fight, FightResult
 
 
 FIELDS = [
@@ -117,3 +123,32 @@ def test_missing_columns_fail_loudly(tmp_path) -> None:
 
     with pytest.raises(ImportError, match="missing columns"):
         import_tidytuesday_fights(path)
+
+
+def test_combining_datasets_sorts_and_rejects_duplicate_ids() -> None:
+    later = Fight(
+        event_date=date(1994, 3, 11),
+        event_name="UFC 2",
+        event_id="ufc-2",
+        bout_order=1,
+        fight_id="fight-2",
+        fighter_a="A",
+        fighter_b="B",
+        result=FightResult.FIGHTER_A_WIN,
+    )
+    earlier = Fight(
+        event_date=date(1993, 11, 12),
+        event_name="UFC 1",
+        event_id="ufc-1",
+        bout_order=1,
+        fight_id="fight-1",
+        fighter_a="C",
+        fighter_b="D",
+        result=FightResult.FIGHTER_A_WIN,
+    )
+
+    combined = combine_fight_datasets([later], [earlier])
+    assert [fight.fight_id for fight in combined] == ["fight-1", "fight-2"]
+
+    with pytest.raises(ImportError, match="Duplicate fight ID"):
+        combine_fight_datasets([earlier], [earlier])

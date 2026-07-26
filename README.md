@@ -13,6 +13,7 @@ Version `0.1` contains:
 
 - a normalized fight-history CSV schema;
 - a converter for the TidyTuesday 2026-07-07 `ufc_fights.csv` dataset;
+- a small attributed UFC 1 seed, which the published dataset lacks;
 - a basic Elo engine with a starting rating of `1500` and `K = 32`;
 - support for wins, losses, draws, and no contests;
 - stable event, fight, and optional fighter IDs;
@@ -44,6 +45,12 @@ TidyTuesday explicitly provides direct download instructions and encourages
 people to create and share analyses. Always retain the source attribution and
 recheck the applicable data terms before redistributing a source dataset.
 
+That file starts with UFC 2. The eight UFC 1 results in
+`data/ufc1_fights.csv` are a small manually checked factual seed based on the
+[official UFC 1 card](https://www.ufc.com/event/ufc-1), with chronological
+match numbers cross-checked against
+[Sherdog's UFC 1 results](https://www.sherdog.com/events/UFC-1-The-Beginning-7).
+
 Generated source and normalized data remain ignored by Git. The project code,
 small fictional sample, and tests can be public without automatically
 republishing thousands of third-party records.
@@ -54,7 +61,8 @@ republishing thousands of third-party records.
 ufc-elo-engine/
 ├── data/
 │   ├── raw/                  # Downloaded/generated files (not committed)
-│   └── sample_fights.csv     # Small fictional test dataset
+│   ├── sample_fights.csv     # Small fictional test dataset
+│   └── ufc1_fights.csv       # Attributed eight-fight historical seed
 ├── outputs/                  # Generated rankings (not committed)
 ├── scripts/
 │   ├── build_rankings.py
@@ -124,6 +132,7 @@ You can also change the model settings:
 
 The importer:
 
+- prepends the eight attributed UFC 1 fights missing from TidyTuesday;
 - validates the expected source columns;
 - normalizes win, loss, draw, and no-contest values;
 - derives stable event and fight identifiers;
@@ -139,6 +148,18 @@ Then generate the historical rankings:
   --input data/raw/ufc_fights.csv `
   --output outputs/ufc_rankings.csv
 ```
+
+The 2026-07-26 validation run produced:
+
+- 8,744 fights across 778 events;
+- a date range from UFC 1 on 1993-11-12 through 2026-06-27;
+- 2,711 distinct fighter names;
+- zero duplicate fight IDs;
+- zero broken per-event bout-order sequences.
+
+This is every fight represented by that source snapshot plus the attributed
+UFC 1 seed. It is not a live feed: events after 2026-06-27 require a newer
+reusable source snapshot.
 
 The TidyTuesday source does not provide stable fighter profile IDs in its fight
 table. The engine therefore falls back to exact fighter names for that source.
@@ -228,7 +249,7 @@ After a pull request is merged, switch to `main` in GitHub Desktop, click
 
 ## Roadmap
 
-- Validate the TidyTuesday import on UFC 1 and several modern events.
+- Keep the imported source and UFC 1 seed validation documented.
 - Add a data-quality report for duplicates, missing values, and aliases.
 - Generate the first full historical Elo ranking.
 - Compare global Elo with division-specific ratings.
