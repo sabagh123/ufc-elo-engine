@@ -1,0 +1,9 @@
+event_date,event_name,event_id,bout_order,fight_id,fighter_a_id,fighter_a,fighter_b_id,fighter_b,result,weight_class,method,round,time,source_url
+1993-11-12,UFC 1: The Beginning,ufc-1,1,ufc1-01,,Gerard Gordeau,,Teila Tuli,fighter_a_win,Open Weight Bout,KO/TKO,1,0:26,https://www.ufc.com/event/ufc-1
+1993-11-12,UFC 1: The Beginning,ufc-1,2,ufc1-02,,Kevin Rosier,,Zane Frazier,fighter_a_win,Open Weight Bout,KO/TKO,1,4:20,https://www.ufc.com/event/ufc-1
+1993-11-12,UFC 1: The Beginning,ufc-1,3,ufc1-03,,Royce Gracie,,Art Jimmerson,fighter_a_win,Open Weight Bout,Submission,1,2:18,https://www.ufc.com/event/ufc-1
+1993-11-12,UFC 1: The Beginning,ufc-1,4,ufc1-04,,Ken Shamrock,,Patrick Smith,fighter_a_win,Open Weight Bout,Submission,1,1:49,https://www.ufc.com/event/ufc-1
+1993-11-12,UFC 1: The Beginning,ufc-1,5,ufc1-05,,Gerard Gordeau,,Kevin Rosier,fighter_a_win,Open Weight Bout,KO/TKO,1,0:59,https://www.ufc.com/event/ufc-1
+1993-11-12,UFC 1: The Beginning,ufc-1,6,ufc1-06,,Royce Gracie,,Ken Shamrock,fighter_a_win,Open Weight Bout,Submission,1,0:57,https://www.ufc.com/event/ufc-1
+1993-11-12,UFC 1: The Beginning,ufc-1,7,ufc1-07,,Jason DeLucia,,Trent Jenkins,fighter_a_win,Open Weight Bout,Submission,1,0:52,https://www.ufc.com/event/ufc-1
+1993-11-12,UFC 1: The Beginning,ufc-1,8,ufc1-08,,Royce Gracie,,Gerard Gordeau,fighter_a_win,Open Weight Bout,Submission,1,1:44,https://www.ufc.com/event/ufc-1
